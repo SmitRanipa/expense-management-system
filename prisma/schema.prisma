@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////////////////////////////
+// USERS
+//////////////////////////////////////////////////
+model users {
+  UserID        Int      @id @default(autoincrement())
+  UserName      String   @db.VarChar(250)
+  EmailAddress  String   @unique @db.VarChar(500)
+  Password      String   @db.VarChar(255)
+  MobileNo      String   @db.VarChar(50)
+  ProfileImage  String?  @db.VarChar(500)
+  IsDeleted     Boolean  @default(false)
+  Created       DateTime @default(now())
+  Modified      DateTime @updatedAt
+
+  peoples       peoples[]
+  categories    categories[]
+  subCategories sub_categories[]
+  projects      projects[]
+  expenses      expenses[]
+  incomes       incomes[]
+  logs          logs[]
+}
+
+//////////////////////////////////////////////////
+// PEOPLES
+//////////////////////////////////////////////////
+model peoples {
+  PeopleID     Int      @id @default(autoincrement())
+  PeopleCode   String?  @db.VarChar(50)
+  Password     String   @db.VarChar(255)
+  PeopleName   String   @db.VarChar(250)
+  Email        String   @db.VarChar(150)
+  MobileNo     String   @db.VarChar(50)
+  Description  String?  @db.VarChar(500)
+  IsActive     Boolean? @default(true)
+  IsDeleted    Boolean  @default(false)
+  Created      DateTime @default(now())
+  Modified     DateTime @updatedAt
+
+  UserID       Int
+  user         users    @relation(fields: [UserID], references: [UserID])
+
+  expenses     expenses[]
+  incomes      incomes[]
+
+  @@unique([UserID, Email])
+}
+
+//////////////////////////////////////////////////
+// CATEGORIES
+//////////////////////////////////////////////////
+model categories {
+  CategoryID    Int      @id @default(autoincrement())
+  CategoryName  String   @db.VarChar(250)
+  LogoPath      String?  @db.VarChar(250)
+  IsExpense     Boolean
+  IsIncome      Boolean
+  IsActive      Boolean
+  IsDeleted     Boolean  @default(false)
+  Description   String?  @db.VarChar(500)
+  Sequence      Decimal? @db.Decimal(10, 2)
+  Created       DateTime @default(now())
+  Modified      DateTime @updatedAt
+
+  UserID        Int
+  user          users    @relation(fields: [UserID], references: [UserID])
+
+  subCategories sub_categories[]
+  expenses      expenses[]
+  incomes       incomes[]
+}
+
+//////////////////////////////////////////////////
+// SUB CATEGORIES
+//////////////////////////////////////////////////
+model sub_categories {
+  SubCategoryID    Int      @id @default(autoincrement())
+  SubCategoryName  String   @db.VarChar(250)
+  LogoPath         String?  @db.VarChar(250)
+  IsExpense        Boolean
+  IsIncome         Boolean
+  IsActive         Boolean
+  IsDeleted        Boolean  @default(false)
+  Description      String?  @db.VarChar(500)
+  Sequence         Decimal? @db.Decimal(10, 2)
+  Created          DateTime @default(now())
+  Modified         DateTime @updatedAt
+
+  CategoryID       Int
+  category         categories @relation(fields: [CategoryID], references: [CategoryID])
+
+  UserID           Int
+  user             users @relation(fields: [UserID], references: [UserID])
+
+  expenses         expenses[]
+  incomes          incomes[]
+}
+
+//////////////////////////////////////////////////
+// PROJECTS
+//////////////////////////////////////////////////
+model projects {
+  ProjectID         Int      @id @default(autoincrement())
+  ProjectName       String   @db.VarChar(250)
+  ProjectLogo       String?  @db.VarChar(250)
+  ProjectStartDate  DateTime?
+  ProjectEndDate    DateTime?
+  ProjectDetail     String?  @db.VarChar(500)
+  Description       String?  @db.VarChar(500)
+  IsActive          Boolean? @default(true)
+  IsDeleted         Boolean  @default(false)
+  Created           DateTime @default(now())
+  Modified          DateTime @updatedAt
+
+  UserID            Int
+  user              users    @relation(fields: [UserID], references: [UserID])
+
+  expenses          expenses[]
+  incomes           incomes[]
+}
+
+//////////////////////////////////////////////////
+// EXPENSES
+//////////////////////////////////////////////////
+model expenses {
+  ExpenseID       Int      @id @default(autoincrement())
+  ExpenseDate     DateTime
+  Amount          Decimal  @db.Decimal(18, 2)
+  ExpenseDetail   String?  @db.VarChar(500)
+  AttachmentPath  String?  @db.VarChar(250)
+  Description     String?  @db.VarChar(500)
+  IsDeleted       Boolean  @default(false)
+  Created         DateTime @default(now())
+  Modified        DateTime @updatedAt
+
+  CategoryID      Int?
+  category        categories? @relation(fields: [CategoryID], references: [CategoryID])
+
+  SubCategoryID   Int?
+  subCategory     sub_categories? @relation(fields: [SubCategoryID], references: [SubCategoryID])
+
+  PeopleID        Int
+  people          peoples @relation(fields: [PeopleID], references: [PeopleID])
+
+  ProjectID       Int?
+  project         projects? @relation(fields: [ProjectID], references: [ProjectID])
+
+  UserID          Int
+  user            users @relation(fields: [UserID], references: [UserID])
+}
+
+//////////////////////////////////////////////////
+// INCOMES
+//////////////////////////////////////////////////
+model incomes {
+  IncomeID        Int      @id @default(autoincrement())
+  IncomeDate      DateTime
+  Amount          Decimal  @db.Decimal(18, 2)
+  IncomeDetail    String?  @db.VarChar(500)
+  AttachmentPath  String?  @db.VarChar(250)
+  Description     String?  @db.VarChar(500)
+  IsDeleted       Boolean  @default(false)
+  Created         DateTime @default(now())
+  Modified        DateTime @updatedAt
+
+  CategoryID      Int?
+  category        categories? @relation(fields: [CategoryID], references: [CategoryID])
+
+  SubCategoryID   Int?
+  subCategory     sub_categories? @relation(fields: [SubCategoryID], references: [SubCategoryID])
+
+  PeopleID        Int
+  people          peoples @relation(fields: [PeopleID], references: [PeopleID])
+
+  ProjectID       Int?
+  project         projects? @relation(fields: [ProjectID], references: [ProjectID])
+
+  UserID          Int
+  user            users @relation(fields: [UserID], references: [UserID])
+}
+
+//////////////////////////////////////////////////
+// LOGS
+//////////////////////////////////////////////////
+model logs {
+  LogID       Int      @id @default(autoincrement())
+  ActionType  String   @db.VarChar(50)
+  EntityName  String   @db.VarChar(100)
+  EntityID    Int?
+  OldData     String?
+  NewData     String?
+  IPAddress   String?  @db.VarChar(50)
+  UserAgent   String?  @db.VarChar(255)
+  Created     DateTime @default(now())
+
+  UserID      Int
+  user        users @relation(fields: [UserID], references: [UserID])
+}
