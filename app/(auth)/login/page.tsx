@@ -1,37 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import * as React from "react";
+import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type LoginRole = "ADMIN" | "EMPLOYEE";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState<LoginRole>("ADMIN");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [role, setRole] = React.useState<LoginRole>("ADMIN");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
 
-  /**
-   * ✅ If user is already authenticated
-   * 👉 Let middleware decide correct dashboard
-   */
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.replace("/");
-    }
-  }, [status, router]);
+  React.useEffect(() => {
+    if (status !== "authenticated") return;
 
-  /**
-   * ⏳ Prevent UI flash while checking session
-   */
-  if (status === "loading") {
-    return <p>Loading...</p>;
-  }
+    const role = session?.user?.role;
+    if (role === "ADMIN") router.replace("/admin/dashboard");
+    else if (role === "EMPLOYEE") router.replace("/employee/dashboard");
+  }, [status, session, router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +40,7 @@ export default function LoginPage() {
     const result = await signIn("credentials", {
       email,
       password,
-      role, // 🔥 role sent to NextAuth
+      role,
       redirect: false,
     });
 
@@ -52,66 +51,80 @@ export default function LoginPage() {
       return;
     }
 
-    /**
-     * ✅ DO NOT redirect here
-     * Middleware will redirect based on role
-     */
-    router.replace("/");
+    const target =
+      role === "ADMIN" ? "/admin/dashboard" : "/employee/dashboard";
+    router.replace(target);
   }
 
   return (
-    <div style={{ maxWidth: 420, margin: "100px auto" }}>
-      <h2>Login</h2>
+    <Card className="border-muted/50 bg-background/70 shadow-xl backdrop-blur">
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-2xl">Welcome back</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Sign in to manage expenses & incomes.
+        </p>
+      </CardHeader>
 
-      <form onSubmit={handleLogin}>
-        {/* ROLE SELECTION */}
-        <div style={{ marginBottom: 15 }}>
-          <label>
-            <input
-              type="radio"
-              value="ADMIN"
-              checked={role === "ADMIN"}
-              onChange={() => setRole("ADMIN")}
-            />
-            Admin
-          </label>
-
-          <label style={{ marginLeft: 20 }}>
-            <input
-              type="radio"
-              value="EMPLOYEE"
-              checked={role === "EMPLOYEE"}
-              onChange={() => setRole("EMPLOYEE")}
-            />
-            Employee
-          </label>
+      <CardContent className="space-y-5">
+        {/* Role Tabs */}
+        <div className="space-y-2">
+          <Label>Login as</Label>
+          <Tabs value={role} onValueChange={(v) => setRole(v as LoginRole)}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="ADMIN">Admin</TabsTrigger>
+              <TabsTrigger value="EMPLOYEE">Employee</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
-        {/* EMAIL */}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="name@example.com"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-        {/* PASSWORD */}
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ marginTop: 10 }}
-        />
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        <button type="submit" disabled={loading} style={{ marginTop: 20 }}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-    </div>
+          <Button className="w-full" type="submit" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
+        </form>
+
+        <div className="text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-foreground underline underline-offset-4"
+          >
+            Create one
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
