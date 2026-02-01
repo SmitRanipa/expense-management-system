@@ -155,6 +155,10 @@ model expenses {
 
   UserID          Int
   user            users @relation(fields: [UserID], references: [UserID])
+
+
+  @@index([PeopleID, IsDeleted, ExpenseDate])
+  @@index([UserID, IsDeleted, ExpenseDate])
 }
 
 //////////////////////////////////////////////////
@@ -185,6 +189,9 @@ model incomes {
 
   UserID          Int
   user            users @relation(fields: [UserID], references: [UserID])
+
+  @@index([PeopleID, IsDeleted, IncomeDate])
+  @@index([UserID, IsDeleted, IncomeDate])
 }
 
 //////////////////////////////////////////////////
