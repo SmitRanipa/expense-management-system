@@ -1,13 +1,7 @@
 export default function Footer() {
   return (
-    <footer
-      style={{
-        padding: 12,
-        borderTop: "1px solid var(--border)",
-        textAlign: "center",
-      }}
-    >
-      © {new Date().getFullYear()} Expense Management System
+    <footer className="border-t px-4 py-4 text-xs text-muted-foreground">
+      Built with Next.js + Prisma • Keep tracking your money 🚀
     </footer>
   );
 }
